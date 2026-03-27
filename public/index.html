@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoltraBot – KI für deinen Discord</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #04050a;
+      --surface: #0d0f1a;
+      --border: #1e2135;
+      --accent: #5865f2;
+      --voltra: #00d4ff;
+      --voltra-dim: rgba(0,212,255,0.12);
+      --text: #e8eaf6;
+      --muted: #6b7299;
+      --green: #23d18b;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID BG ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(4,5,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px;
+      color: var(--voltra);
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--voltra);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; font-weight: 700; color: #000;
+    }
+
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.9rem; transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+      cursor: pointer; border: none;
+      text-decoration: none; transition: all .2s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #4752c4; transform: translateY(-1px); }
+
+    .btn-voltra {
+      background: var(--voltra);
+      color: #000;
+    }
+    .btn-voltra:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--voltra); color: var(--voltra); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 90vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 4rem 1.5rem;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--voltra-dim);
+      border: 1px solid rgba(0,212,255,0.25);
+      color: var(--voltra);
+      padding: 0.3rem 1rem;
+      border-radius: 99px;
+      font-size: 0.8rem; font-family: 'Space Mono', monospace;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 1.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--voltra), #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.2rem; color: var(--muted);
+      max-width: 580px; line-height: 1.7;
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-btns {
+      display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+    .btn-lg { padding: 0.85rem 2rem; font-size: 1rem; }
+
+    .hero-glow {
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── STATS ── */
+    .stats {
+      position: relative; z-index: 1;
+      display: flex; gap: 2px; justify-content: center; flex-wrap: wrap;
+      padding: 0 1.5rem 5rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.5rem 2.5rem;
+      text-align: center;
+      flex: 1; min-width: 160px;
+    }
+    .stat-card:first-child { border-radius: 12px 0 0 12px; }
+    .stat-card:last-child { border-radius: 0 12px 12px 0; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--voltra); }
+    .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* ── FEATURES ── */
+    .section {
+      position: relative; z-index: 1;
+      max-width: 1100px; margin: 0 auto;
+      padding: 5rem 1.5rem;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem; color: var(--voltra);
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .section h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800; letter-spacing: -1px;
+      margin-bottom: 3rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      border-radius: 12px;
+      transition: border-color .3s, transform .3s;
+    }
+    .feature-card:hover {
+      border-color: rgba(0,212,255,0.3);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      background: var(--voltra-dim);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .feature-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .feature-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── HOW IT WORKS ── */
+    .steps {
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .step {
+      display: grid; grid-template-columns: 56px 1fr;
+      gap: 1.5rem; align-items: start;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 48px; height: 48px;
+      border: 1px solid var(--voltra);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem; color: var(--voltra);
+      flex-shrink: 0;
+    }
+    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .step p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── CTA ── */
+    .cta {
+      position: relative; z-index: 1;
+      margin: 0 1.5rem 5rem;
+      background: linear-gradient(135deg, var(--surface), rgba(88,101,242,0.1));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 4rem 2rem;
+      text-align: center;
+      overflow: hidden;
+    }
+    .cta::before {
+      content: '';
+      position: absolute; top: -80px; right: -80px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(0,212,255,0.08), transparent 70%);
+    }
+    .cta h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 1rem; }
+    .cta p { color: var(--muted); margin-bottom: 2rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      color: var(--muted); font-size: 0.85rem; flex-wrap: wrap; gap: 1rem;
+    }
+
+    /* ── LOGIN BANNER ── */
+    #login-banner {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+      z-index: 200;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      display: none;
+    }
+    #login-banner p { font-size: 0.9rem; color: var(--muted); }
+    #login-banner strong { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">
+    <div class="logo-icon">V</div>
+    VoltraBot
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">Wie es funktioniert</a>
+    <a href="/dashboard" class="btn btn-outline" id="dashboard-btn">Dashboard</a>
+    <a href="/invite" class="btn btn-primary">Einladen</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-badge">
+    <div class="badge-dot"></div>
+    Powered by Voltra AI
+  </div>
+  <h1>Dein Discord-Server.<br>Mit echter <span>KI</span>.</h1>
+  <p>VoltraBot bringt eine leistungsstarke KI direkt in deinen Discord. Eigener System-Prompt pro Server, wählbarer Channel, volle Kontrolle.</p>
+  <div class="hero-btns">
+    <a href="/invite" class="btn btn-voltra btn-lg">⚡ Bot einladen</a>
+    <a href="/dashboard" class="btn btn-outline btn-lg">Dashboard öffnen</a>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-num">∞</div>
+    <div class="stat-label">Server möglich</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">1</div>
+    <div class="stat-label">KI-Modell</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">100%</div>
+    <div class="stat-label">Anpassbar</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">0€</div>
+    <div class="stat-label">Kosten</div>
+  </div>
+</div>
+
+<section class="section" id="features">
+  <div class="section-label">// Features</div>
+  <h2>Alles was du brauchst</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>Voltra AI Engine</h3>
+      <p>Nutzt deine eigene Voltra AI API für intelligente, kontextbewusste Antworten direkt in Discord.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📌</div>
+      <h3>Channel-Auswahl</h3>
+      <p>Bestimme exakt, in welchem Channel der Bot aktiv ist. Kein Spam – nur wo du es willst.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✏️</div>
+      <h3>System-Prompt pro Server</h3>
+      <p>Jeder Server bekommt seinen eigenen Charakter. Setze Rolle, Ton und Wissen individuell.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔄</div>
+      <h3>Gesprächsgedächtnis</h3>
+      <p>Der Bot merkt sich den Kontext des letzten Gesprächs – für natürliche, flüssige Unterhaltungen.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚙️</div>
+      <h3>Web-Dashboard</h3>
+      <p>Konfiguriere alles komfortabel über das Dashboard – kein Bot-Command nötig, alles per Browser.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <h3>Discord OAuth2</h3>
+      <p>Login mit Discord – du siehst nur deine Server, auf denen du Admin bist. Sicher & einfach.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="section-label">// Anleitung</div>
+  <h2>In 3 Schritten live</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div>
+        <h3>Bot einladen</h3>
+        <p>Klick auf "Bot einladen" und wähle deinen Discord-Server. Du brauchst Admin-Rechte auf dem Server.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div>
+        <h3>Dashboard öffnen</h3>
+        <p>Melde dich mit Discord an und wähle deinen Server. Du siehst sofort alle deine Server als Admin.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div>
+        <h3>Konfigurieren & loslegen</h3>
+        <p>Wähle den Channel, setze einen System-Prompt und speichere. Der Bot ist sofort aktiv – schreib einfach los.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cta">
+  <h2>Bereit deinen Server zu revolutionieren?</h2>
+  <p>VoltraBot ist kostenlos, schnell eingerichtet und läuft 24/7 auf deinem Server.</p>
+  <a href="/invite" class="btn btn-voltra btn-lg">⚡ Jetzt Bot einladen</a>
+</div>
+
+<footer>
+  <div>© 2025 VoltraBot · Powered by Voltra AI</div>
+  <div style="display:flex;gap:1.5rem;">
+    <a href="/invite" style="color:var(--muted);text-decoration:none;">Bot einladen</a>
+    <a href="/dashboard" style="color:var(--muted);text-decoration:none;">Dashboard</a>
+  </div>
+</footer>
+
+<script>
+  // Dashboard-Button anpassen je nach Login-Status
+  fetch('/api/me').then(r => r.json()).then(data => {
+    const btn = document.getElementById('dashboard-btn');
+    if (data.user) {
+      btn.textContent = `👤 ${data.user.username}`;
+    }
+  });
+</script>
+</body>
+</html>
