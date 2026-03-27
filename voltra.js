@@ -19,7 +19,7 @@ function clearHistory(guildId, channelId) {
   histories.delete(getKey(guildId, channelId));
 }
 
-async function chat(message, guildId, channelId, systemPrompt) {
+async function chat(message, guildId, channelId, systemPrompt, botName = 'VoltraBot') {
   const history = getHistory(guildId, channelId);
 
   // Neue Nachricht in History
@@ -27,6 +27,13 @@ async function chat(message, guildId, channelId, systemPrompt) {
 
   // Nur die letzten 20 Nachrichten senden (Kontextfenster begrenzen)
   const recentHistory = history.slice(-20);
+
+  // System-Prompt pro Guild um Bot-Namen und Modell ergänzen
+  const finalSystemPrompt = [
+    systemPrompt || 'Du bist ein hilfreicher KI-Assistent in einem Discord-Server.',
+    `Dein Name ist "${botName}". Verwende konsequent nur diesen Namen.`,
+    'Du nutzt immer das Modell "Voltra AI".'
+  ].join('\n');
 
   try {
     const response = await fetch(process.env.VOLTRA_API_URL || 'https://voltraai.onrender.com/api/chat', {
@@ -37,7 +44,7 @@ async function chat(message, guildId, channelId, systemPrompt) {
       },
       body: JSON.stringify({
         message,
-        system: systemPrompt,
+        system: finalSystemPrompt,
         history: recentHistory.slice(0, -1) // Ohne die aktuelle Nachricht
       })
     });

@@ -2,7 +2,7 @@
 const { Client, GatewayIntentBits, Partials, ActivityType, SlashCommandBuilder, Routes } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { chat, clearHistory } = require('./voltra');
-const { getGuild, setGuild } = require('./data/store');
+const { getGuild, setGuild, setChannelPrompt } = require('./data/store');
 require('dotenv').config();
 
 const client = new Client({
@@ -27,9 +27,12 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('setprompt')
-    .setDescription('Setzt den System-Prompt für diese Guild')
+    .setDescription('Setzt den System-Prompt (Chat oder Guild)')
     .addStringOption(opt =>
-      opt.setName('prompt').setDescription('Der System-Prompt').setRequired(true)
+      opt.setName('prompt').setDescription('Der System-Prompt').setRequired(true).setMaxLength(2000)
+    )
+    .addBooleanOption(opt =>
+      opt.setName('guild').setDescription('Wenn true: als Standard-Prompt für die ganze Guild setzen').setRequired(false)
     )
     .setDefaultMemberPermissions(8),
 
@@ -92,9 +95,13 @@ client.on('interactionCreate', async interaction => {
 
   if (commandName === 'setprompt') {
     const prompt = interaction.options.getString('prompt');
-    setGuild(guildId, { systemPrompt: prompt });
+    const forGuild = interaction.options.getBoolean('guild') === true;
+    if (forGuild) setGuild(guildId, { systemPrompt: prompt });
+    else setChannelPrompt(guildId, interaction.channelId, prompt);
     return interaction.reply({
-      content: `✅ System-Prompt gesetzt:\n\`\`\`${prompt}\`\`\``,
+      content: forGuild
+        ? '✅ Guild-Standard System-Prompt gesetzt. (Modell bleibt immer Voltra AI)'
+        : `✅ System-Prompt für <#${interaction.channelId}> gesetzt. (Modell bleibt immer Voltra AI)`,
       ephemeral: true
     });
   }
@@ -115,12 +122,21 @@ client.on('interactionCreate', async interaction => {
 
   if (commandName === 'status') {
     const s = getGuild(guildId);
+    const channelPrompt = (s.channelPrompts && s.channelPrompts[interaction.channelId]) || null;
+    const activePrompt = channelPrompt || s.systemPrompt;
+    const promptPreviewMaxLen = 1200;
+    const safePrompt = String(activePrompt || '').replace(/```/g, '`` `');
+    const promptPreview = safePrompt.length > promptPreviewMaxLen
+      ? safePrompt.slice(0, promptPreviewMaxLen) + '\n...[gekürzt]'
+      : safePrompt;
     return interaction.reply({
       content: [
         `**⚙️ Bot-Status für ${interaction.guild.name}**`,
         `📌 Aktiver Channel: ${s.channelId ? `<#${s.channelId}>` : 'Keiner gesetzt'}`,
         `🤖 Bot-Name: ${s.botName}`,
-        `📝 System-Prompt:\n\`\`\`${s.systemPrompt}\`\`\``
+        `🧠 Modell: Voltra AI`,
+        `💬 Prompt: ${channelPrompt ? 'Channel-Override' : 'Guild-Default'}`,
+        `📝 System-Prompt (dieser Chat):\n\`\`\`${promptPreview}\`\`\``
       ].join('\n'),
       ephemeral: true
     });
@@ -146,11 +162,13 @@ client.on('messageCreate', async message => {
   try {
     await message.channel.sendTyping();
 
+    const chatPrompt = (settings.channelPrompts && settings.channelPrompts[message.channelId]) || settings.systemPrompt;
     const reply = await chat(
       content,
       message.guildId,
       message.channelId,
-      settings.systemPrompt
+      chatPrompt,
+      settings.botName
     );
 
     // Lange Antworten aufteilen (Discord limit: 2000 Zeichen)

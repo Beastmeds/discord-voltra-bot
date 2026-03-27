@@ -16,10 +16,12 @@ function save(data) {
 
 function getGuild(guildId) {
   const data = load();
-  return data[guildId] || {
-    systemPrompt: 'Du bist ein hilfreicher KI-Assistent in einem Discord-Server.',
-    channelId: null,
-    botName: 'VoltraBot'
+  const stored = data[guildId] || {};
+  return {
+    systemPrompt: stored.systemPrompt ?? 'Du bist ein hilfreicher KI-Assistent in einem Discord-Server.',
+    channelId: stored.channelId ?? null,
+    botName: stored.botName ?? 'VoltraBot',
+    channelPrompts: stored.channelPrompts || {}
   };
 }
 
@@ -34,4 +36,25 @@ function getAllGuilds() {
   return load();
 }
 
-module.exports = { getGuild, setGuild, getAllGuilds };
+function setChannelPrompt(guildId, channelId, prompt) {
+  const data = load();
+  if (!data[guildId]) data[guildId] = {};
+  if (!data[guildId].channelPrompts) data[guildId].channelPrompts = {};
+
+  const cleaned = typeof prompt === 'string' ? prompt.trim() : '';
+  if (!cleaned) {
+    delete data[guildId].channelPrompts[channelId];
+  } else {
+    data[guildId].channelPrompts[channelId] = cleaned;
+  }
+
+  save(data);
+  return data[guildId].channelPrompts[channelId] || null;
+}
+
+function getChannelPrompt(guildId, channelId) {
+  const g = getGuild(guildId);
+  return (g.channelPrompts && g.channelPrompts[channelId]) || null;
+}
+
+module.exports = { getGuild, setGuild, getAllGuilds, setChannelPrompt, getChannelPrompt };
