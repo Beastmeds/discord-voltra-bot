@@ -48,7 +48,9 @@ async function chat(message, guildId, channelId, systemPrompt) {
     }
 
     const data = await response.json();
-    const reply = data.response || data.message || data.content || 'Keine Antwort erhalten.';
+    
+    // Voltra AI gibt "answer" zurück
+    const reply = data.answer || data.response || data.message || data.content || 'Keine Antwort erhalten.';
 
     // Antwort in History speichern
     history.push({ role: 'assistant', content: reply });

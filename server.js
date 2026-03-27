@@ -33,6 +33,7 @@ function requireAuth(req, res, next) {
 
 // ── Auth Routes ───────────────────────────────────────────────────────────────
 app.get('/auth/login', (req, res) => {
+  console.log('[Auth] Redirect URI wird verwendet:', REDIRECT_URI);
   const params = new URLSearchParams({
     client_id: CLIENT_ID,
     redirect_uri: REDIRECT_URI,
