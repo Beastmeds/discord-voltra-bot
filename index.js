@@ -6,7 +6,7 @@ const { startBot } = require('./bot');
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`[Web] ✅ Dashboard läuft auf http://localhost:${PORT}`);
+  console.log(`[Web] ✅ Dashboard läuft auf https://beastsmp.beastmeds.de:${PORT}`);
 });
 
 startBot();

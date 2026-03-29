@@ -20,7 +20,7 @@ app.use(session({
 const DISCORD_API = 'https://discord.com/api/v10';
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || 'DEINE_CLIENT_ID';
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
-const BASE_URL = process.env.BASE_URL || 'http://beastsmp.beastmeds.de:3000';
+const BASE_URL = process.env.BASE_URL || 'https://beastsmp.beastmeds.de:3000';
 const REDIRECT_URI = `${BASE_URL}/auth/callback`;
 const BOT_PERMISSIONS = '274877908992'; // Send Messages + Read Messages + Use Slash Commands
 
